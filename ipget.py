@@ -1,7 +1,7 @@
 from requests import get
-import config
+import config as cf
 
 def get_IP_address():
-    ip = get(config.IP_API_SERVICE).text
+    ip = get(cf.IP_API_SERVICE).text
     return ip
 
