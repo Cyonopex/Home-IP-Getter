@@ -4,14 +4,29 @@ import telepot
 from telepot.loop import MessageLoop
 from telepot.delegate import pave_event_space, per_chat_id, create_open
 import logging
+from logging.handlers import TimedRotatingFileHandler
 
 import config as cf
 import ipget
 
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
+def getLogger():
+    logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
 
-logging.info('Starting up Telegram bot server...')
-logging.info('Current IP is: ' + ipget.get_IP_address())
+    fileHandler = TimedRotatingFileHandler(cf.LOG_PATH + cf.FILE_NAME,when="d",interval=1,backupCount=30)
+    fileHandler.setFormatter(logFormatter)
+    logger.addHandler(fileHandler)
+
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(logFormatter)
+    logger.addHandler(consoleHandler)
+    return logger
+
+logger = getLogger()
+
+logger.info('Starting up Telegram bot server...')
+logger.info('Current IP is: ' + ipget.get_IP_address())
 
 class MessageCounter(telepot.helper.ChatHandler):
     def __init__(self, *args, **kwargs):
@@ -19,19 +34,22 @@ class MessageCounter(telepot.helper.ChatHandler):
 
     def on_chat_message(self, msg):
         
-        message = msg['text']
         user = msg['chat']['username']
-        logging.info("Received message from: " + user + " - Message: " + message)
+        if 'text' in msg:
+            message = msg['text']
+        else:
+            message = "blank"
+        logger.info("Received message from: " + user + " - Message: " + message)
 
         if user.lower() in cf.TELEGRAM_USERNAME or not cf.TELEGRAM_USERNAME:
             # Accept user
             self.sender.sendMessage("Your IP is: " + ipget.get_IP_address())
-            logging.info(user + " successfully acquired IP address")
+            logger.info(user + " successfully acquired IP address")
 
         else:
             # Deny user
             self.sender.sendMessage("You are not authorised to get the IP.")
-            logging.info(user + " attempted to use the bot")
+            logger.info(user + " attempted to use the bot")
                 	
 TOKEN = cf.APIKEY
 
@@ -47,3 +65,4 @@ MessageLoop(bot).run_as_thread()
 
 while 1:
     time.sleep(10)
+
