@@ -11,6 +11,7 @@ import ipget
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.INFO)
 
 logging.info('Starting up Telegram bot server...')
+logging.info('Current IP is: ' + ipget.get_IP_address())
 
 class MessageCounter(telepot.helper.ChatHandler):
     def __init__(self, *args, **kwargs):
@@ -22,7 +23,7 @@ class MessageCounter(telepot.helper.ChatHandler):
         user = msg['chat']['username']
         logging.info("Received message from: " + user + " - Message: " + message)
 
-        if user.lower() in cf.TELEGRAM_USERNAME:
+        if user.lower() in cf.TELEGRAM_USERNAME or not cf.TELEGRAM_USERNAME:
             # Accept user
             self.sender.sendMessage("Your IP is: " + ipget.get_IP_address())
             logging.info(user + " successfully acquired IP address")
